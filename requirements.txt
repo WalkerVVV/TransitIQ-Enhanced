@@ -1,0 +1,14 @@
+streamlit
+pandas
+numpy
+plotly
+xlsxwriter
+openpyxl
+matplotlib
+seaborn
+scikit-learn
+geopy
+folium
+streamlit-folium
+kaleido
+jinja2
