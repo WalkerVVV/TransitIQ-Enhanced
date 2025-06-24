@@ -141,7 +141,14 @@ def calculate_zone_metrics(df):
     return zone_metrics
 
 def apply_xparcel_logic(row):
-    """Apply Xparcel routing logic to determine optimal service"""
+    """Apply Xparcel routing logic - ONLY for demo data generation
+    This should NOT override existing Xparcel Type values!"""
+    
+    # If Xparcel Type already exists and is not empty, DO NOT CHANGE IT
+    if 'Xparcel Type' in row and pd.notna(row.get('Xparcel Type')) and row.get('Xparcel Type') != '':
+        return row['Xparcel Type']
+    
+    # Only apply logic if there's no existing service type
     if pd.isna(row.get('Calculated Zone')):
         return "Ground"
     
@@ -193,8 +200,10 @@ def generate_demo_data(data_type="Complete Dataset"):
         'Weight': weights
     })
     
-    # Apply Xparcel logic for service type
-    raw_df['Xparcel Type'] = raw_df.apply(apply_xparcel_logic, axis=1)
+    # Apply Xparcel logic for service type ONLY if not already present
+    if 'Xparcel Type' not in raw_df.columns or raw_df['Xparcel Type'].isna().all():
+        raw_df['Xparcel Type'] = raw_df.apply(apply_xparcel_logic, axis=1)
+    # Otherwise keep the existing Xparcel Type values
     
     # Calculate transit times based on service and zone
     def calc_transit(row):
@@ -390,19 +399,25 @@ def generate_empty_analysis_results():
 
 # Individual analysis functions
 def analyze_tier_performance(df):
-    """Analyze performance by Xparcel tier"""
+    """Analyze performance by Xparcel tier - FIXED to show only actual services"""
     try:
         if 'Xparcel Type' not in df.columns or 'Days In Transit' not in df.columns:
             return generate_empty_analysis_results()['tier_performance']
         
-        tier_analysis = df.groupby('Xparcel Type', observed=False).agg({
+        # Only analyze service types that actually exist in the data
+        actual_services = df['Xparcel Type'].dropna().unique()
+        
+        # Filter dataframe to only include rows with valid service types
+        valid_df = df[df['Xparcel Type'].isin(actual_services)]
+        
+        tier_analysis = valid_df.groupby('Xparcel Type', observed=True).agg({
             'Days In Transit': ['count', 'mean', 'median', 
                                lambda x: np.percentile(x.dropna(), 95) if len(x.dropna()) > 0 else 0]
         }).round(2)
         
         # Add SLA performance
-        if 'SLA Status' in df.columns:
-            sla_perf = df.groupby('Xparcel Type', observed=False)['SLA Status'].apply(
+        if 'SLA Status' in valid_df.columns:
+            sla_perf = valid_df.groupby('Xparcel Type', observed=True)['SLA Status'].apply(
                 lambda x: safe_aggregate_percentage(x, 'On-Time')
             )
             tier_analysis = pd.concat([tier_analysis, sla_perf.to_frame('On-Time %')], axis=1)
@@ -410,26 +425,48 @@ def analyze_tier_performance(df):
             tier_analysis['On-Time %'] = 95.0  # Default
         
         tier_analysis.columns = ['Shipments', 'Avg Days', 'Median', '95th Pctl', 'On-Time %']
-        return tier_analysis.reset_index()
+        result = tier_analysis.reset_index()
+        
+        # Sort by a consistent order
+        service_order = ['Priority', 'Expedited', 'Ground']
+        result['sort_order'] = result['Xparcel Type'].apply(
+            lambda x: service_order.index(x) if x in service_order else 999
+        )
+        result = result.sort_values('sort_order').drop('sort_order', axis=1)
+        
+        return result
     
     except Exception as e:
         return generate_empty_analysis_results()['tier_performance']
 
 def analyze_service_mix(df):
-    """Analyze service mix distribution"""
+    """Analyze service mix distribution - FIXED to respect actual data"""
     try:
         if 'Xparcel Type' not in df.columns:
             return generate_empty_analysis_results()['service_mix']
         
+        # Get the actual service types in the data
         service_mix = df['Xparcel Type'].value_counts()
+        
+        # Only include services that actually exist in the data
+        # Do NOT artificially add Ground if it doesn't exist
         total = service_mix.sum()
         service_mix_pct = service_mix.apply(lambda x: safe_percentage(x, total))
         
-        return pd.DataFrame({
+        result_df = pd.DataFrame({
             'Service': service_mix.index,
             'Shipments': service_mix.values,
             'Percentage': service_mix_pct.values
         })
+        
+        # Sort by a consistent order if needed
+        service_order = ['Priority', 'Expedited', 'Ground']
+        result_df['sort_order'] = result_df['Service'].apply(
+            lambda x: service_order.index(x) if x in service_order else 999
+        )
+        result_df = result_df.sort_values('sort_order').drop('sort_order', axis=1)
+        
+        return result_df
     
     except Exception as e:
         return generate_empty_analysis_results()['service_mix']

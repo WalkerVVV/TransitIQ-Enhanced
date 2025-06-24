@@ -184,25 +184,60 @@ def clean_and_rename_columns_enhanced(df):
     if 'Xparcel Type' not in df.columns:
         # Check for service-related columns
         for col in df.columns:
-            if 'service' in col.lower() or 'method' in col.lower():
-                # Try to standardize values
-                df['Xparcel Type'] = df[col].fillna('Ground')
-                # Map common values
+            if 'service' in col.lower() or 'method' in col.lower() or 'type' in col.lower():
+                # Don't use fillna('Ground') - keep actual values
+                df['Xparcel Type'] = df[col]
+                
+                # Map common values more accurately
                 type_mapping = {
-                    'ground': 'Ground',
-                    'standard': 'Ground',
-                    'economy': 'Ground',
-                    'expedited': 'Expedited',
-                    'express': 'Expedited',
-                    '2day': 'Expedited',
+                    # Priority mappings
                     'priority': 'Priority',
                     'next day': 'Priority',
-                    'overnight': 'Priority'
+                    'overnight': 'Priority',
+                    '1 day': 'Priority',
+                    '1-3 day': 'Priority',
+                    'xparcel priority': 'Priority',
+                    
+                    # Expedited mappings
+                    'expedited': 'Expedited',
+                    'express': 'Expedited',
+                    '2 day': 'Expedited',
+                    '2-5 day': 'Expedited',
+                    'xparcel expedited': 'Expedited',
+                    
+                    # Ground mappings - ONLY if explicitly ground
+                    'ground': 'Ground',
+                    'standard ground': 'Ground',
+                    'economy': 'Ground',
+                    'xparcel ground': 'Ground',
+                    'parcel select': 'Ground'
                 }
-                df['Xparcel Type'] = df['Xparcel Type'].str.lower().map(
-                    lambda x: next((v for k, v in type_mapping.items() if k in str(x).lower()), 'Ground')
-                )
+                
+                # Apply mapping with exact match first, then partial match
+                def map_service_type(value):
+                    if pd.isna(value):
+                        return value
+                    
+                    val_lower = str(value).lower().strip()
+                    
+                    # Exact match
+                    if val_lower in type_mapping:
+                        return type_mapping[val_lower]
+                    
+                    # Partial match - but be careful not to misclassify
+                    for pattern, mapped_type in type_mapping.items():
+                        if pattern in val_lower:
+                            return mapped_type
+                    
+                    # If no match found, keep original value - DON'T default to Ground
+                    return value
+                
+                df['Xparcel Type'] = df['Xparcel Type'].apply(map_service_type)
                 print(f"Created 'Xparcel Type' from '{col}'")
+                
+                # Show distribution to help debug
+                print("Service type distribution:")
+                print(df['Xparcel Type'].value_counts())
                 break
     
     # Calculate SLA Status if we have the data
