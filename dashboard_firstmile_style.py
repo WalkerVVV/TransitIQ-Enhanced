@@ -63,8 +63,8 @@ st.markdown("""
     
     .fm-section-header h2 {
         color: var(--fm-navy);
-        font-size: 1.5rem;
-        font-weight: 600;
+        font-size: 2rem;  /* Increased from 1.5rem */
+        font-weight: 700;
         margin: 0;
     }
     
@@ -164,10 +164,23 @@ st.markdown("""
         border-right: 1px solid rgba(0,0,0,0.08);
     }
     
-    /* Headers and text */
-    h1, h2, h3 {
+    /* Headers and text - Bigger sizes */
+    h1 {
+        color: var(--fm-navy);
+        font-weight: 700;
+        font-size: 2.5rem !important;
+    }
+    
+    h2 {
+        color: var(--fm-navy);
+        font-weight: 700;
+        font-size: 2rem !important;
+    }
+    
+    h3 {
         color: var(--fm-navy);
         font-weight: 600;
+        font-size: 1.5rem !important;
     }
     
     /* Info boxes */
@@ -206,10 +219,14 @@ st.markdown("""
         font-size: 1.1rem;
     }
     
-    /* Hide Streamlit branding */
+    /* Hide Streamlit branding but keep header for sidebar toggle */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
+    /* Keep header visible for sidebar toggle button */
+    header[data-testid="stHeader"] {
+        background-color: transparent;
+        height: 3rem;
+    }
     
     /* Plotly chart styling */
     .js-plotly-plot .plotly {
@@ -289,13 +306,13 @@ with st.sidebar:
     
     # Debug Mode Toggle
     st.session_state.debug_mode = st.checkbox(
-        "🔍 Debug Mode", 
+        "🐛 Debug Mode", 
         value=st.session_state.debug_mode,
         help="Show detailed information about data processing"
     )
     
     # Data Generation Options
-    st.markdown("### 🎯 Demo Options")
+    st.markdown("### 🎲 Demo Options")
     
     demo_type = st.selectbox(
         "Demo Data Type",
@@ -306,14 +323,14 @@ with st.sidebar:
     st.divider()
     
     # Toolkit Options with cleaner design
-    st.markdown("### 🛠️ Analysis Tools")
+    st.markdown("### ⚙️ Analysis Tools")
     
-    enable_national_select = st.checkbox("📍 Carrier Optimization", value=True)
+    enable_national_select = st.checkbox("🚛 Carrier Optimization", value=True)
     enable_zone_toolkit = st.checkbox("🗺️ Zone Analysis", value=True)
-    enable_xparcel_logic = st.checkbox("🧠 Smart Routing", value=True)
+    enable_xparcel_logic = st.checkbox("🎯 Smart Routing", value=True)
     enable_tet = st.checkbox("🚀 Express Lane", value=True)
     enable_cost_optimizer = st.checkbox("💰 Cost Analysis", value=True)
-    enable_carrier_scoring = st.checkbox("⭐ Performance Scoring", value=True)
+    enable_carrier_scoring = st.checkbox("📊 Performance Scoring", value=True)
     
     st.divider()
     
@@ -340,11 +357,11 @@ def debug_log(message, level="INFO"):
     
     if debug_enabled:
         if level == "ERROR":
-            st.error(f"🔴 DEBUG [{level}]: {message}")
+            st.error(f"🐛 DEBUG [{level}]: {message}")
         elif level == "WARNING":
-            st.warning(f"🟡 DEBUG [{level}]: {message}")
+            st.warning(f"🐛 DEBUG [{level}]: {message}")
         else:
-            st.info(f"🔵 DEBUG [{level}]: {message}")
+            st.info(f"🐛 DEBUG [{level}]: {message}")
 
 # Import enhanced column mapper
 try:
