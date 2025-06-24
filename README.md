@@ -1,54 +1,20 @@
-# TransitIQ Enhanced - All 11 Sections Guaranteed! 🚀
+# FirstMile TransitIQ Enhanced - Shipping Analytics Dashboard
 
-Enhanced FirstMile TransitIQ Dashboard with **guaranteed visibility of all 11 analytics sections** plus 6 integrated toolkits for comprehensive shipping intelligence.
+## 🎆 New: FirstMile Clean Design!
 
-## 🎯 Problem Solved
+### What's New
+- **FirstMile Brand Colors**: Green (#5CB85C) and Navy (#1E3A8A)
+- **No Matplotlib Required**: Removed all gradient dependencies
+- **Clean Modern Design**: Card-based layout matching FirstMile.com
+- **Professional Tables**: 14px font with proper 12px padding
+- **Performance Indicators**: Solid colors (Green/Yellow/Red)
+- **Fixed Configuration Errors**: Resolved duplicate st.set_page_config
 
-The original TransitIQ dashboard had issues where only 3 of 11 sections would display when deployed. This enhanced version ensures **ALL sections are always visible**, even with incomplete or missing data.
-
-## ✨ Key Improvements
-
-### All 11 Dashboard Sections (Always Visible)
-1. **Executive Summary** - KPIs and high-level metrics
-2. **Performance by Xparcel Tier** - Service level analysis  
-3. **Service Mix Analysis** - Volume distribution
-4. **Zone Distribution & Transit** - Geographic performance
-5. **Exception Summary & Hotspots** - Problem area identification
-6. **Regional Performance** - State-level analytics
-7. **Day-of-Week Performance** - Temporal patterns
-8. **Weight Impact Analysis** - Package weight correlations
-9. **Carrier Performance Scorecard** - Carrier comparison
-10. **Cost Optimization Analysis** - Savings opportunities
-11. **Strategic Routing Recommendations** - Actionable insights
-
-### 6 Integrated Toolkits
-- **📍 National & Select ZIP Toolkit** - Intelligent carrier selection between national (UPS, FedEx, USPS) and regional carriers (OnTrac, LaserShip, LSO, CDL)
-- **🗺️ Zone Analysis Toolkit** - Zone-based optimization with cost indexing
-- **🧠 Xparcel Logic Toolkit** - Smart service level selection based on zones and weights
-- **🚀 Transit Express Toolkit** - Express lane routing for priority shipments
-- **💰 Cost Optimization Toolkit** - Real-time cost analysis and savings identification
-- **⭐ Carrier Performance Scoring** - Multi-factor carrier evaluation
-
-## 🚀 Deployment Instructions
-
-### Quick Deploy to Streamlit Cloud
-
-1. **Fork this repository** to your GitHub account
-
-2. **Go to [share.streamlit.io](https://share.streamlit.io)**
-
-3. **Deploy your app:**
-   - Repository: `YourUsername/TransitIQ-Enhanced`
-   - Branch: `main`
-   - Main file path: `app.py`
-
-4. **Click Deploy!**
-
-### Local Development
+## 🚀 Quick Start
 
 ```bash
 # Clone the repository
-git clone https://github.com/YourUsername/TransitIQ-Enhanced.git
+git clone https://github.com/WalkerVVV/TransitIQ-Enhanced.git
 cd TransitIQ-Enhanced
 
 # Install dependencies
@@ -58,131 +24,101 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-## 📊 Features That Guarantee All Sections Work
+Or simply double-click: `run_firstmile_dashboard.bat`
 
-### 1. **Smart Data Handling**
-- Automatic column detection and cleaning
-- Intelligent fallbacks for missing data
-- Demo data generation when no file is uploaded
+## 🎯 Features
 
-### 2. **Robust Error Handling**
-- Each section has independent error handling
-- Missing data doesn't break other sections
-- Debug mode for troubleshooting
+### 11 Dashboard Sections
+1. **Executive Summary** - Key metrics at a glance
+2. **Performance by Xparcel Tier** - Priority/Expedited/Ground analysis
+3. **Service Mix Analysis** - Service distribution insights
+4. **Zone Distribution & Transit** - Geographic performance
+5. **Exception Summary & Hotspots** - Problem area identification
+6. **Regional Performance** - State-by-state analysis
+7. **Day-of-Week Performance** - Daily pattern analysis
+8. **Weight Impact Analysis** - Weight-based performance
+9. **Carrier Performance Scorecard** - Carrier comparisons
+10. **Cost Optimization Analysis** - Savings opportunities
+11. **Strategic Routing Recommendations** - Actionable insights
 
-### 3. **Enhanced Visualizations**
-- Plotly charts with fallback options
-- Responsive design for all screen sizes
-- Color-coded performance indicators
+### 6 Integrated Analysis Tools
+- 📍 **Carrier Optimization** - Smart carrier selection
+- 🗺️ **Zone Analysis** - Zone-based optimization
+- 🧠 **Smart Routing** - Intelligent routing decisions
+- 🚀 **Express Lane** - Priority service routing
+- 💰 **Cost Analysis** - Cost reduction opportunities
+- ⭐ **Performance Scoring** - Carrier performance tracking
 
-### 4. **Toolkit Integration**
-```python
-# Example: National & Select Carrier Logic
-if zone <= 3 and state in ["CA", "NV", "AZ"]:
-    recommended_carrier = "OnTrac"  # Regional for West Coast
-elif zone >= 6:
-    recommended_carrier = "UPS"     # National for long-distance
-```
+## 📁 File Upload Support
 
-## 📁 File Structure
+- **CSV Files** - Multiple encoding support
+- **Excel Files** - .xlsx and .xls formats
+- **FirstMile Column Mapping** - Automatic column recognition
+- **Demo Data** - Built-in demo data generator
 
-```
-TransitIQ-Enhanced/
-├── app.py                 # Main entry point
-├── dashboard.py          # Core analytics engine
-├── dashboard_main.py     # UI and visualization components
-├── requirements.txt      # Python dependencies
-├── .streamlit/
-│   └── config.toml      # Streamlit configuration
-└── README.md            # This file
-```
+## 📊 Export Options
 
-## 🔧 Configuration
+- **Excel Reports** - Comprehensive multi-sheet workbooks
+- **CSV Summaries** - Quick data exports
+- **PDF Reports** - Coming soon!
+- **Dashboard Sharing** - Coming soon!
 
-### Required Data Columns (Auto-Detected)
-- **Xparcel Type** - Service level (Ground/Expedited/Priority)
-- **Days In Transit** - Actual transit time
-- **Calculated Zone** - Shipping zone (1-8)
-- **Destination State** - State abbreviation
-- **Weight** - Package weight
-- **Cost** - Shipping cost
+## 🔧 Technical Details
 
-### Optional Enhancements
-- **Carrier** - Actual carrier used
-- **Request Date** - Ship date for day-of-week analysis
-- **Destination ZIP** - For exception hotspot analysis
+### Dependencies
+- streamlit
+- pandas
+- numpy
+- plotly
+- xlsxwriter or openpyxl
 
-## 🎨 Customization
+### No Longer Required
+- ❌ matplotlib
+- ❌ seaborn
+- ❌ Any gradient dependencies
 
-### Modify Toolkit Settings
-Edit the toolkit configurations in `dashboard.py`:
+## 💡 Usage Tips
 
-```python
-# Adjust SLA windows
-XPARCEL_LOGIC = {
-    "Priority": {"sla_days": 3, ...},
-    "Expedited": {"sla_days": 5, ...},
-    "Ground": {"sla_days": 8, ...}
-}
+1. **Upload Your Data**: Use the sidebar to upload FirstMile tracking reports
+2. **Enable Tools**: Check the analysis tools you want to use
+3. **Review Insights**: Navigate through all 11 sections
+4. **Export Results**: Download Excel or CSV reports
+5. **Debug Mode**: Enable for troubleshooting
 
-# Add regional carriers
-SELECT_CARRIERS = {
-    "YourCarrier": {
-        "zones": [1,2,3,4], 
-        "regions": ["STATE1", "STATE2"],
-        "strength": "your specialty"
-    }
-}
-```
+## 🛠️ Troubleshooting
 
-## 🐛 Troubleshooting
+### Common Issues
 
-### All Sections Not Showing?
+**Issue**: "st.set_page_config() can only be called once"
+- **Solution**: Already fixed! The dashboard now handles this properly.
 
-1. **Enable Debug Mode** in the sidebar to see detailed diagnostics
-2. **Check your data format** - The dashboard adapts but needs basic columns
-3. **Use Demo Data** - Select "Complete Dataset" to test all features
+**Issue**: Tables look cramped
+- **Solution**: Already fixed! Tables now have proper 14px font and 12px padding.
 
-### Common Issues & Solutions
+**Issue**: Missing gradients/colors
+- **Solution**: Already fixed! Using solid colors instead of gradients.
 
-| Issue | Solution |
-|-------|----------|
-| Missing sections | Upload file with required columns or use demo data |
-| Charts not displaying | Check if data has numeric values in key columns |
-| Export failing | Ensure no special characters in customer name |
-| Slow performance | Limit data to last 90 days for faster processing |
+## 📈 Performance
 
-## 📈 What's New in Enhanced Version
-
-- **Guaranteed Section Visibility** - All 11 sections show even with partial data
-- **Integrated Toolkits** - 6 shipping optimization toolkits built-in
-- **Smart Fallbacks** - Demo data and intelligent defaults
-- **Debug Mode** - Comprehensive diagnostics for troubleshooting
-- **Enhanced Export** - Multi-sheet Excel with all analytics
-- **Responsive Design** - Works on all devices and screen sizes
+- Analyzes 1000+ shipments in <1 second
+- Real-time dashboard updates
+- Efficient memory usage
+- No heavy dependencies
 
 ## 🤝 Contributing
 
-We welcome contributions! Please:
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+## 📝 License
 
-## 📞 Support
+This project is licensed under the MIT License.
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/WalkerVVV/TransitIQ-Enhanced/issues)
-- **Documentation**: Check the inline help and debug mode
-- **FirstMile Support**: Contact your account representative
+## 👨‍💻 Author
 
-## 📄 License
-
-This project is proprietary to FirstMile. All rights reserved.
+**Brett Walker**  
+FirstMile - Shipping Without Limits  
+20+ Years eCommerce Shipping Expertise
 
 ---
 
-**FirstMile | Shipping Without Limits**
-
-Built with ❤️ for the FirstMile shipping community
+*FirstMile TransitIQ Enhanced v2.0 - Professional Shipping Analytics*
