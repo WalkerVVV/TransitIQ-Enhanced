@@ -1,89 +1,14 @@
-import streamlit as st
+# dashboard_imports.py - Extract functions from dashboard.py without executing it
+# This avoids the duplicate st.set_page_config() error
+
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.offline import plot
-import io
-import base64
-import re
-from datetime import datetime, timedelta
 import numpy as np
-import warnings
-import json
-import traceback
-import sys
+from datetime import datetime, timedelta
+import re
 
-# Suppress the specific division warning
-warnings.filterwarnings("ignore", category=RuntimeWarning, message="invalid value encountered in scalar divide")
+# Copy the essential constants and functions from dashboard.py
 
-# Enhanced page config with better layout
-st.set_page_config(
-    page_title="FirstMile TransitIQ Enhanced | Complete Analytics Dashboard", 
-    layout="wide",
-    initial_sidebar_state="expanded",
-    menu_items={
-        'Get Help': 'https://github.com/WalkerVVV/TransitIQ-Enhanced',
-        'Report a bug': "https://github.com/WalkerVVV/TransitIQ-Enhanced/issues",
-        'About': "FirstMile TransitIQ Enhanced v2.0 - All 11 sections guaranteed!"
-    }
-)
-
-# Add custom CSS for better styling
-st.markdown("""
-<style>
-    .main {
-        padding: 0rem 1rem;
-    }
-    .stAlert {
-        margin-top: -1rem;
-    }
-    div[data-testid="stSidebar"] {
-        min-width: 300px;
-    }
-    .section-header {
-        background: linear-gradient(90deg, #1E3A8A 0%, #059669 100%);
-        padding: 10px;
-        border-radius: 5px;
-        color: white;
-        margin: 20px 0 10px 0;
-    }
-    .toolkit-box {
-        background: #f0f9ff;
-        border: 2px solid #0284c7;
-        padding: 15px;
-        border-radius: 8px;
-        margin: 10px 0;
-    }
-    .debug-info {
-        background: #fffbeb;
-        border: 1px solid #fbbf24;
-        padding: 10px;
-        border-radius: 5px;
-        margin: 10px 0;
-        font-size: 0.9em;
-    }
-    .missing-data-warning {
-        background: #fef2f2;
-        border: 1px solid #ef4444;
-        padding: 10px;
-        border-radius: 5px;
-        margin: 10px 0;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# ----------------------
-# Initialize Session State Early
-# ----------------------
-# This MUST happen before any functions that use session state
-if 'debug_mode' not in st.session_state:
-    st.session_state.debug_mode = False
-
-# ----------------------
-# TOOLKIT CONFIGURATIONS
-# ----------------------
-
-# National and Select ZIP Code Toolkit
+# Toolkit Configurations
 NATIONAL_CARRIERS = {
     "UPS": {"zones": [1,2,3,4,5,6,7,8], "strength": "reliability", "avg_cost_multiplier": 1.2},
     "FedEx": {"zones": [1,2,3,4,5,6,7,8], "strength": "speed", "avg_cost_multiplier": 1.25},
@@ -97,7 +22,6 @@ SELECT_CARRIERS = {
     "CDL": {"zones": [1,2,3], "regions": ["IL", "WI", "IN", "MI", "OH"], "strength": "midwest efficiency"}
 }
 
-# Zone Toolkit Configuration
 ZONE_DEFINITIONS = {
     "1": {"miles": "0-50", "typical_transit": 1, "cost_index": 1.0},
     "2": {"miles": "51-150", "typical_transit": 2, "cost_index": 1.15},
@@ -109,7 +33,6 @@ ZONE_DEFINITIONS = {
     "8": {"miles": "1801+", "typical_transit": 7, "cost_index": 2.0}
 }
 
-# Xparcel Logic Toolkit
 XPARCEL_LOGIC = {
     "Priority": {
         "sla_days": 3,
@@ -133,133 +56,6 @@ XPARCEL_LOGIC = {
         "features": ["Economy service", "Basic tracking", "Best value"]
     }
 }
-
-# ----------------------
-# File Upload (Enhanced Sidebar)
-# ----------------------
-with st.sidebar:
-    st.markdown("## 📊 TransitIQ Enhanced")
-    st.markdown("### 🚀 All 11 Sections + Toolkits!")
-    
-    st.divider()
-    
-    uploaded_file = st.file_uploader(
-        "Upload FirstMile Domestic Tracking Report",
-        type=["csv", "xlsx"],
-        help="Upload your FirstMile export file (CSV or Excel format)"
-    )
-    
-    st.divider()
-    
-    # Debug Mode Toggle
-    st.session_state.debug_mode = st.checkbox(
-        "🔍 Debug Mode", 
-        value=st.session_state.debug_mode,
-        help="Show detailed information about missing data and analysis issues"
-    )
-    
-    # Data Generation Options
-    st.markdown("### 🎯 Demo Data Options")
-    
-    demo_type = st.selectbox(
-        "Demo Data Type",
-        ["Complete Dataset", "Minimal Dataset", "No Dataset"],
-        help="Generate demo data if no file is uploaded"
-    )
-    
-    st.divider()
-    
-    # Toolkit Options
-    st.markdown("### 🛠️ Integrated Toolkits")
-    
-    enable_national_select = st.checkbox("📍 National & Select ZIP Toolkit", value=True)
-    enable_zone_toolkit = st.checkbox("🗺️ Zone Analysis Toolkit", value=True)
-    enable_xparcel_logic = st.checkbox("🧠 Xparcel Logic Toolkit", value=True)
-    enable_tet = st.checkbox("🚀 Transit Express Toolkit", value=True)
-    enable_cost_optimizer = st.checkbox("💰 Cost Optimization Toolkit", value=True)
-    enable_carrier_scoring = st.checkbox("⭐ Carrier Performance Scoring", value=True)
-    
-    st.divider()
-    
-    # Show enabled features
-    st.markdown("### ✅ Active Features")
-    active_features = []
-    if enable_national_select: active_features.append("National/Select Routing")
-    if enable_zone_toolkit: active_features.append("Zone Analytics")
-    if enable_xparcel_logic: active_features.append("Xparcel Intelligence")
-    if enable_tet: active_features.append("Transit Express")
-    if enable_cost_optimizer: active_features.append("Cost Analysis")
-    if enable_carrier_scoring: active_features.append("Carrier Scoring")
-    
-    for feature in active_features:
-        st.success(f"✓ {feature}")
-
-# Enhanced helper functions
-def debug_log(message, level="INFO"):
-    """Enhanced debug logging"""
-    # Safely check if debug mode is enabled
-    debug_enabled = False
-    try:
-        if 'debug_mode' in st.session_state:
-            debug_enabled = st.session_state.debug_mode
-    except:
-        # If session state isn't available, don't debug
-        pass
-    
-    if debug_enabled:
-        if level == "ERROR":
-            st.error(f"🔴 DEBUG [{level}]: {message}")
-        elif level == "WARNING":
-            st.warning(f"🟡 DEBUG [{level}]: {message}")
-        else:
-            st.info(f"🔵 DEBUG [{level}]: {message}")
-
-# Import the enhanced column mapper
-try:
-    from firstmile_column_mapper import clean_and_rename_columns_enhanced
-    use_enhanced_mapper = True
-except ImportError:
-    use_enhanced_mapper = False
-    debug_log("Enhanced column mapper not available, using basic cleaning", "WARNING")
-
-def clean_and_rename_columns(df):
-    """Strip, normalize, and fix invisible chars with debug info"""
-    if use_enhanced_mapper:
-        try:
-            # Use the enhanced mapper that handles FirstMile column variations
-            debug_log(f"Using enhanced FirstMile column mapper on {len(df.columns)} columns")
-            mapped_df = clean_and_rename_columns_enhanced(df)
-            
-            # Show what was mapped in debug mode
-            original_cols = set(df.columns)
-            new_cols = set(mapped_df.columns)
-            mapped_cols = new_cols - original_cols
-            if mapped_cols:
-                debug_log(f"Mapped columns: {list(mapped_cols)}")
-            
-            return mapped_df
-        except Exception as e:
-            debug_log(f"Error in enhanced mapping, falling back to basic: {e}", "ERROR")
-    
-    # Fallback to basic cleaning
-    try:
-        original_cols = df.columns.tolist()
-        clean_cols = []
-        for col in df.columns:
-            cleaned = (
-                str(col).replace('\xa0', ' ')  # Replace non-breaking space
-                       .replace('\u200b', '')  # Remove zero-width space
-                       .replace('\ufeff', '')  # Remove BOM
-                       .strip()
-            )
-            clean_cols.append(cleaned)
-        df.columns = clean_cols
-        
-        debug_log(f"Basic cleaning: cleaned {len(original_cols)} columns")
-        return df
-    except Exception as e:
-        debug_log(f"Error cleaning columns: {e}", "ERROR")
-        return df
 
 def safe_percentage(numerator, denominator, decimal_places=1):
     """Safely calculate percentage avoiding division by zero"""
@@ -294,7 +90,6 @@ def safe_aggregate_percentage(series, condition_value, decimal_places=1):
     except:
         return 0.0
 
-# Toolkit Functions
 def analyze_carrier_options(state, zone, service_type="Ground"):
     """Analyze best carrier options using National & Select toolkit"""
     carriers = []
@@ -364,8 +159,6 @@ def apply_xparcel_logic(row):
 
 def generate_demo_data(data_type="Complete Dataset"):
     """Generate comprehensive demo data with all required fields"""
-    debug_log(f"Generating demo data: {data_type}")
-    
     if data_type == "No Dataset":
         return None, {}
     
@@ -429,9 +222,19 @@ def generate_demo_data(data_type="Complete Dataset"):
     
     raw_df['Cost'] = raw_df.apply(calc_cost, axis=1)
     
-    # Add SLA status
+    # Add SLA status with realistic performance
+    # First, determine which shipments will miss SLA (about 8-10%)
+    n_sla_misses = int(n_rows * 0.09)  # 9% SLA miss rate
+    sla_miss_indices = np.random.choice(n_rows, n_sla_misses, replace=False)
+    
     def get_sla_status(row):
         sla_days = XPARCEL_LOGIC[row['Xparcel Type']]["sla_days"]
+        
+        # Check if this row is designated as SLA miss
+        if row.name in sla_miss_indices:
+            return "SLA Miss"
+        
+        # Otherwise, determine if on-time or early
         if row['Days In Transit'] <= sla_days:
             return "On-Time" if row['Days In Transit'] >= sla_days - 1 else "Early"
         else:
@@ -449,57 +252,49 @@ def analyze_comprehensive_performance_enhanced(raw_df):
     results = {}
     
     if raw_df is None or raw_df.empty:
-        debug_log("No data available for analysis", "WARNING")
-        # Return empty but structured results
         return generate_empty_analysis_results()
     
     try:
         df = raw_df.copy()
-        debug_log(f"Analyzing {len(df)} rows of data")
         
         # Ensure we have required columns
         ensure_required_columns(df)
         
-        # 1. Performance by Xparcel Tier (GUARANTEED)
+        # 1. Performance by Xparcel Tier
         results['tier_performance'] = analyze_tier_performance(df)
         
-        # 2. Service Mix (GUARANTEED)
+        # 2. Service Mix
         results['service_mix'] = analyze_service_mix(df)
         
-        # 3. Zone Distribution (GUARANTEED)
+        # 3. Zone Distribution
         results['zone_distribution'] = analyze_zone_distribution(df)
         
-        # 4. Transit Time by Zone (GUARANTEED)
+        # 4. Transit Time by Zone
         results['zone_transit'] = analyze_zone_transit(df)
         
-        # 5. Exception Analysis (GUARANTEED)
+        # 5. Exception Analysis
         results['exception_hotspots'] = analyze_exceptions(df)
         results['exception_summary'] = generate_exception_summary(df)
         
-        # 6. Regional Performance (GUARANTEED)
+        # 6. Regional Performance
         results['regional_performance'] = analyze_regional_performance(df)
         
-        # 7. Day of Week Analysis (GUARANTEED)
+        # 7. Day of Week Analysis
         results['day_of_week'] = analyze_day_of_week(df)
         
-        # 8. Weight Impact Analysis (GUARANTEED)
+        # 8. Weight Impact Analysis
         results['weight_impact'] = analyze_weight_impact(df)
         
-        # 9. Carrier Performance (NEW - from toolkits)
+        # 9. Carrier Performance
         results['carrier_performance'] = analyze_carrier_performance(df)
         
-        # 10. Cost Analysis (NEW - from toolkits)
+        # 10. Cost Analysis
         results['cost_analysis'] = analyze_costs(df)
         
-        # 11. Routing Optimization (NEW - from toolkits)
+        # 11. Routing Optimization
         results['routing_optimization'] = generate_routing_recommendations(df)
         
-        debug_log(f"Analysis complete with {len(results)} result sets")
-        
     except Exception as e:
-        debug_log(f"Error in comprehensive analysis: {e}", "ERROR")
-        debug_log(f"Traceback: {traceback.format_exc()}", "ERROR")
-        # Return structured empty results on error
         return generate_empty_analysis_results()
     
     return results
@@ -521,7 +316,6 @@ def ensure_required_columns(df):
     
     for col, default in required_columns.items():
         if col not in df.columns:
-            debug_log(f"Adding missing column: {col} with default: {default}", "WARNING")
             df[col] = default
 
 def generate_empty_analysis_results():
@@ -594,21 +388,21 @@ def generate_empty_analysis_results():
         }
     }
 
-# Individual analysis functions with error handling
+# Individual analysis functions
 def analyze_tier_performance(df):
     """Analyze performance by Xparcel tier"""
     try:
         if 'Xparcel Type' not in df.columns or 'Days In Transit' not in df.columns:
             return generate_empty_analysis_results()['tier_performance']
         
-        tier_analysis = df.groupby('Xparcel Type').agg({
+        tier_analysis = df.groupby('Xparcel Type', observed=False).agg({
             'Days In Transit': ['count', 'mean', 'median', 
                                lambda x: np.percentile(x.dropna(), 95) if len(x.dropna()) > 0 else 0]
         }).round(2)
         
         # Add SLA performance
         if 'SLA Status' in df.columns:
-            sla_perf = df.groupby('Xparcel Type')['SLA Status'].apply(
+            sla_perf = df.groupby('Xparcel Type', observed=False)['SLA Status'].apply(
                 lambda x: safe_aggregate_percentage(x, 'On-Time')
             )
             tier_analysis = pd.concat([tier_analysis, sla_perf.to_frame('On-Time %')], axis=1)
@@ -619,7 +413,6 @@ def analyze_tier_performance(df):
         return tier_analysis.reset_index()
     
     except Exception as e:
-        debug_log(f"Error in tier performance analysis: {e}", "ERROR")
         return generate_empty_analysis_results()['tier_performance']
 
 def analyze_service_mix(df):
@@ -639,7 +432,6 @@ def analyze_service_mix(df):
         })
     
     except Exception as e:
-        debug_log(f"Error in service mix analysis: {e}", "ERROR")
         return generate_empty_analysis_results()['service_mix']
 
 def analyze_zone_distribution(df):
@@ -665,7 +457,6 @@ def analyze_zone_distribution(df):
         })
     
     except Exception as e:
-        debug_log(f"Error in zone distribution analysis: {e}", "ERROR")
         return generate_empty_analysis_results()['zone_distribution']
 
 def analyze_zone_transit(df):
@@ -680,7 +471,7 @@ def analyze_zone_transit(df):
         if not zone_col or 'Days In Transit' not in df.columns:
             return generate_empty_analysis_results()['zone_transit']
         
-        zone_transit = df.groupby(zone_col)['Days In Transit'].mean().round(2)
+        zone_transit = df.groupby(zone_col, observed=False)['Days In Transit'].mean().round(2)
         
         return pd.DataFrame({
             'Zone': zone_transit.index,
@@ -688,7 +479,6 @@ def analyze_zone_transit(df):
         })
     
     except Exception as e:
-        debug_log(f"Error in zone transit analysis: {e}", "ERROR")
         return generate_empty_analysis_results()['zone_transit']
 
 def analyze_exceptions(df):
@@ -719,7 +509,6 @@ def analyze_exceptions(df):
         })
     
     except Exception as e:
-        debug_log(f"Error in exception analysis: {e}", "ERROR")
         return generate_empty_analysis_results()['exception_hotspots']
 
 def generate_exception_summary(df):
@@ -750,7 +539,6 @@ def generate_exception_summary(df):
         }
     
     except Exception as e:
-        debug_log(f"Error in exception summary: {e}", "ERROR")
         return generate_empty_analysis_results()['exception_summary']
 
 def analyze_regional_performance(df):
@@ -766,13 +554,13 @@ def analyze_regional_performance(df):
             return generate_empty_analysis_results()['regional_performance']
         
         if 'Days In Transit' in df.columns:
-            regional = df.groupby(state_col).agg({
+            regional = df.groupby(state_col, observed=False).agg({
                 'Days In Transit': ['count', 'mean']
             })
             regional.columns = ['Volume', 'Avg Transit']
             
             if 'SLA Status' in df.columns:
-                sla_perf = df.groupby(state_col)['SLA Status'].apply(
+                sla_perf = df.groupby(state_col, observed=False)['SLA Status'].apply(
                     lambda x: safe_aggregate_percentage(x, 'On-Time')
                 )
                 regional['On-Time %'] = sla_perf
@@ -784,7 +572,6 @@ def analyze_regional_performance(df):
             return generate_empty_analysis_results()['regional_performance']
     
     except Exception as e:
-        debug_log(f"Error in regional performance analysis: {e}", "ERROR")
         return generate_empty_analysis_results()['regional_performance']
 
 def analyze_day_of_week(df):
@@ -803,13 +590,13 @@ def analyze_day_of_week(df):
         df['Day_of_Week'] = df[date_col].dt.day_name()
         
         if 'Days In Transit' in df.columns:
-            dow_analysis = df.groupby('Day_of_Week').agg({
+            dow_analysis = df.groupby('Day_of_Week', observed=False).agg({
                 'Days In Transit': ['count', 'mean']
             })
             dow_analysis.columns = ['Volume', 'Avg Transit']
             
             if 'SLA Status' in df.columns:
-                sla_perf = df.groupby('Day_of_Week')['SLA Status'].apply(
+                sla_perf = df.groupby('Day_of_Week', observed=False)['SLA Status'].apply(
                     lambda x: safe_aggregate_percentage(x, 'On-Time')
                 )
                 dow_analysis['On-Time %'] = sla_perf
@@ -830,7 +617,6 @@ def analyze_day_of_week(df):
             return generate_empty_analysis_results()['day_of_week']
     
     except Exception as e:
-        debug_log(f"Error in day of week analysis: {e}", "ERROR")
         return generate_empty_analysis_results()['day_of_week']
 
 def analyze_weight_impact(df):
@@ -855,13 +641,13 @@ def analyze_weight_impact(df):
         )
         
         if 'Days In Transit' in df.columns:
-            weight_analysis = df.groupby('Weight_Bucket').agg({
+            weight_analysis = df.groupby('Weight_Bucket', observed=False).agg({
                 'Days In Transit': ['count', 'mean']
             })
             weight_analysis.columns = ['Volume', 'Avg Transit']
             
             if 'SLA Status' in df.columns:
-                sla_perf = df.groupby('Weight_Bucket')['SLA Status'].apply(
+                sla_perf = df.groupby('Weight_Bucket', observed=False)['SLA Status'].apply(
                     lambda x: safe_aggregate_percentage(x, 'On-Time')
                 )
                 weight_analysis['On-Time %'] = sla_perf
@@ -873,7 +659,6 @@ def analyze_weight_impact(df):
             return generate_empty_analysis_results()['weight_impact']
     
     except Exception as e:
-        debug_log(f"Error in weight impact analysis: {e}", "ERROR")
         return generate_empty_analysis_results()['weight_impact']
 
 def analyze_carrier_performance(df):
@@ -888,14 +673,14 @@ def analyze_carrier_performance(df):
                 'Avg Cost': [12.50, 13.25, 9.75, 8.90, 9.10]
             })
         
-        carrier_perf = df.groupby('Carrier').agg({
+        carrier_perf = df.groupby('Carrier', observed=False).agg({
             'Days In Transit': 'count',
             'Cost': 'mean'
         })
         carrier_perf.columns = ['Volume', 'Avg Cost']
         
         if 'SLA Status' in df.columns:
-            sla_perf = df.groupby('Carrier')['SLA Status'].apply(
+            sla_perf = df.groupby('Carrier', observed=False)['SLA Status'].apply(
                 lambda x: safe_aggregate_percentage(x, 'On-Time')
             )
             carrier_perf['On-Time %'] = sla_perf
@@ -905,7 +690,6 @@ def analyze_carrier_performance(df):
         return carrier_perf.reset_index()
     
     except Exception as e:
-        debug_log(f"Error in carrier performance analysis: {e}", "ERROR")
         return pd.DataFrame({
             'Carrier': ['No Data'],
             'Volume': [0],
@@ -919,7 +703,7 @@ def analyze_costs(df):
         cost_analysis = {}
         
         if 'Cost' in df.columns and 'Xparcel Type' in df.columns:
-            cost_by_service = df.groupby('Xparcel Type')['Cost'].mean().to_dict()
+            cost_by_service = df.groupby('Xparcel Type', observed=False)['Cost'].mean().to_dict()
             cost_analysis['avg_cost_by_service'] = cost_by_service
         else:
             cost_analysis['avg_cost_by_service'] = {
@@ -929,7 +713,7 @@ def analyze_costs(df):
             }
         
         if 'Cost' in df.columns and 'Calculated Zone' in df.columns:
-            cost_by_zone = df.groupby('Calculated Zone')['Cost'].mean().to_dict()
+            cost_by_zone = df.groupby('Calculated Zone', observed=False)['Cost'].mean().to_dict()
             cost_analysis['cost_per_zone'] = cost_by_zone
         else:
             cost_analysis['cost_per_zone'] = {
@@ -947,7 +731,6 @@ def analyze_costs(df):
         return cost_analysis
     
     except Exception as e:
-        debug_log(f"Error in cost analysis: {e}", "ERROR")
         return generate_empty_analysis_results()['cost_analysis']
 
 def generate_routing_recommendations(df):
@@ -1016,55 +799,4 @@ def generate_routing_recommendations(df):
         }
     
     except Exception as e:
-        debug_log(f"Error in routing recommendations: {e}", "ERROR")
         return generate_empty_analysis_results()['routing_optimization']
-
-# Continue with the rest of dashboard.py in the next part...
-def summarize_xparcel_performance(df):
-    '''Summarize Xparcel performance metrics'''
-    try:
-        if df is None or df.empty:
-            return {
-                'total_shipments': 0,
-                'ground_pct': 0,
-                'expedited_pct': 0,
-                'priority_pct': 0,
-                'avg_transit_time': 0,
-                'on_time_pct': 0
-            }
-        
-        total = len(df)
-        
-        # Service mix percentages
-        service_mix = {}
-        if 'Xparcel Type' in df.columns:
-            service_counts = df['Xparcel Type'].value_counts()
-            service_mix = (service_counts / total * 100).to_dict()
-        
-        # Average transit time
-        avg_transit = df['Days In Transit'].mean() if 'Days In Transit' in df.columns else 0
-        
-        # On-time percentage
-        on_time_pct = 0
-        if 'SLA Status' in df.columns:
-            on_time_count = (df['SLA Status'] == 'On-Time').sum()
-            on_time_pct = (on_time_count / total * 100) if total > 0 else 0
-        
-        return {
-            'total_shipments': total,
-            'ground_pct': service_mix.get('Ground', 0),
-            'expedited_pct': service_mix.get('Expedited', 0),
-            'priority_pct': service_mix.get('Priority', 0),
-            'avg_transit_time': round(avg_transit, 1),
-            'on_time_pct': round(on_time_pct, 1)
-        }
-    except Exception as e:
-        debug_log(f'Error in summarize_xparcel_performance: {e}', 'ERROR')
-        return {
-            'total_shipments': 0,
-            'ground_pct': 0,
-            'expedited_pct': 0,
-            'priority_pct': 0,
-            'avg_transit_time': 0,
-            'on_time_pct': 0
-        }
